@@ -2,5 +2,4 @@ rootProject.name = 'vulpes'
 include 'vulpes-values'
 include 'vulpes-swirl'
 include 'vulpes-buffer'
-include 'vulpes-benchmarks'
 
