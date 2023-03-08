@@ -34,4 +34,9 @@ public class BufferReadPointer {
     public void moveTo(int index) {
         this.index.accept(index);
     }
+
+    public void readNextReverse(SampleData target) {
+        target.readFrom(data, index.getAsInt() << sampleCount.getShift());
+        index.decrement();
+    }
 }

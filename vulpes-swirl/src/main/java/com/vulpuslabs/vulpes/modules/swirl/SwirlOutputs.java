@@ -1,5 +1,7 @@
 package com.vulpuslabs.vulpes.modules.swirl;
 
+import com.vulpuslabs.vulpes.values.smoothed.DCBlocker;
+
 import java.util.function.DoubleConsumer;
 import java.util.function.IntFunction;
 

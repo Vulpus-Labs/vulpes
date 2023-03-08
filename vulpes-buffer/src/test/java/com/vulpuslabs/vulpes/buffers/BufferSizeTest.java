@@ -3,12 +3,14 @@ package com.vulpuslabs.vulpes.buffers;
 import com.vulpuslabs.vulpes.buffers.api.BufferSize;
 import org.junit.jupiter.api.Test;
 
+import java.util.Random;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class BufferSizeTest {
 
     @Test
-    public void testFastModInt() {
+    public void testWrapInt() {
         assertEquals(0, BufferSize.BUFFER_1k.wrap(0));
         assertEquals(512, BufferSize.BUFFER_1k.wrap(512));
         assertEquals(0, BufferSize.BUFFER_1k.wrap(1024));
@@ -26,7 +28,7 @@ public class BufferSizeTest {
     }
 
     @Test
-    public void testFastModDouble() {
+    public void testWrapDouble() {
         assertEquals(0.0, BufferSize.BUFFER_1k.wrap(0.0));
         assertEquals(512.0, BufferSize.BUFFER_1k.wrap(512.0));
         assertEquals(0.0, BufferSize.BUFFER_1k.wrap(1024.0));
@@ -48,5 +50,16 @@ public class BufferSizeTest {
         assertEquals(0.5, BufferSize.BUFFER_1k.wrap(0.5));
 
         assertEquals(0.5, 1024.5 % 1024.0);
+
+        Random random = new Random();
+        for (int i=0; i<10000; i++) {
+            var unwrapped = random.nextDouble() * 8192.0 - 4096.0;
+            var expected = unwrapped >= 0.0
+                ? unwrapped % 1024.0
+                    : 1024.0 - (Math.abs(unwrapped) % 1024.0);
+            assertEquals(expected, BufferSize.BUFFER_1k.wrap(unwrapped));
+        }
     }
+
+
 }

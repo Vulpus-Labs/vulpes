@@ -23,7 +23,7 @@ public class PolarInterpolator {
 
         // Always go there the quickest way you can
         this.angleDelta = angleDistance < 0.5
-                ? angleDistance * angleDirection / timeSamples
+                ? angleDistance * angleDirection * reciprocal
                 : (1.0 - angleDistance) * -angleDirection * reciprocal;
 
         this.radiusDelta = (targetRadius - currentRadius) * reciprocal;

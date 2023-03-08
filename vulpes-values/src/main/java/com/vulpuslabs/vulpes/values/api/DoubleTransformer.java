@@ -6,6 +6,10 @@ import java.util.function.DoubleSupplier;
 @FunctionalInterface
 public interface DoubleTransformer {
 
+    DoubleTransformer IDENTITY = (d) -> d;
+    DoubleTransformer CONSTANT_ZERO = (d) -> 0.0;
+    DoubleTransformer CONSTANT_ONE = (d) -> 1.0;
+
     double apply(double value);
 
     default DoubleSupplier transforming(DoubleSupplier supplier) {
@@ -14,6 +18,13 @@ public interface DoubleTransformer {
 
     default DoubleConsumer transforming(DoubleConsumer consumer) {
         return new DoubleConsumerTransformer(consumer, this);
+    }
+
+    default DoubleTransformer andThen(DoubleTransformer next) {
+        return new ComposedDoubleTransformer(this, next);
+    }
+    default DoubleTransformer compose(DoubleTransformer previous) {
+        return new ComposedDoubleTransformer(previous, this);
     }
 
     final class DoubleSupplierTransfomer implements DoubleSupplier {
@@ -45,6 +56,22 @@ public interface DoubleTransformer {
         @Override
         public void accept(double value) {
             consumer.accept(transformer.apply(value));
+        }
+    }
+
+    final class ComposedDoubleTransformer implements DoubleTransformer {
+
+        private final DoubleTransformer first;
+        private final DoubleTransformer second;
+
+        public ComposedDoubleTransformer(DoubleTransformer first, DoubleTransformer second) {
+            this.first = first;
+            this.second = second;
+        }
+
+        @Override
+        public double apply(double value) {
+            return second.apply(first.apply(value));
         }
     }
 

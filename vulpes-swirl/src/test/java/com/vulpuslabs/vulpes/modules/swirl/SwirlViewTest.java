@@ -13,6 +13,6 @@ public class SwirlViewTest {
         var logo = ByteBuffer.wrap(getClass()
                 .getResourceAsStream("logo_green.png")
                 .readAllBytes());
-        var view = new SwirlView(logo, model, 8, 200, 200);
+        var view = new Graphics2dSwirlView(logo, model, 8, 200, 200);
     }
 }

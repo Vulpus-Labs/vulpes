@@ -3,6 +3,8 @@ package com.vulpuslabs.vulpes.modules.swirl;
 import com.vulpuslabs.vulpes.values.api.DoubleTransformer;
 import com.vulpuslabs.vulpes.values.ranges.Range;
 
+import java.awt.*;
+
 public class SwirlController {
 
     private static final Range LONG_INTERPOLATION = new Range(60000, 600000);
@@ -22,6 +24,7 @@ public class SwirlController {
     private int intermediateCount;
     private int interpolationRange = 2;
     private DoubleTransformer interpolationLengthTransformer = MEDIUM_TRANSFORM;
+    private int intermediateInterval = 20;
 
     public SwirlController(SwirlModel model,
                            SwirlView view,
@@ -35,6 +38,10 @@ public class SwirlController {
         this.outputs = outputs;
 
         this.interpolationController = interpolationController;
+    }
+
+    public void redraw(Graphics2D graphics) {
+        view.redraw(graphics);
     }
 
     public void initialise() {
@@ -53,13 +60,23 @@ public class SwirlController {
         inputs.setRadiusBipolar(radiusBipolar);
     }
 
+    public void connectTriggerDriftInput() {
+        inputs.setDriftTriggerIsConnected(true);
+    }
+
+    public void disconnectTriggerDriftInput() {
+        inputs.setDriftTriggerIsConnected(true);
+    }
+
     public void startProcessingAudio() {
         isProcessingAudio = true;
+        intermediateInterval = 5;
         view.setDrawHeads(false);
     }
 
     public void stopProcessingAudio() {
         isProcessingAudio = false;
+        intermediateInterval = 20;
         interpolationController.setNewTargets(model);
         view.setDrawHeads(true);
     }
@@ -70,7 +87,7 @@ public class SwirlController {
 
     public void setInterpolationRange(int range, double interpolationLengthUnit) {
         interpolationRange = range;
-        interpolationLengthTransformer = switch(range) {
+        interpolationLengthTransformer = switch (range) {
             case 0 -> SHORT_TRANSFORM;
             case 1 -> MEDIUM_TRANSFORM;
             default -> LONG_TRANSFORM;
@@ -80,7 +97,7 @@ public class SwirlController {
     }
 
     public String describeInterpolationRange() {
-        return switch(interpolationRange) {
+        return switch (interpolationRange) {
             case 0 -> "1-500ms";
             case 1 -> "0.5-60s";
             default -> "60-600s";
@@ -96,14 +113,10 @@ public class SwirlController {
     public String describeInterpolationLength(double interpolationLengthUnit) {
         var ms = interpolationLengthTransformer.apply(interpolationLengthUnit);
 
-        return switch(interpolationRange) {
+        return switch (interpolationRange) {
             case 0, 1 -> (int) ms + "ms";
             default -> (int) (ms / 1000) + "s";
         };
-    }
-
-    public void setNewTargets() {
-        interpolationController.setNewTargets(model);
     }
 
     public void setActiveSize(int activeSize) {
@@ -137,12 +150,20 @@ public class SwirlController {
 
         if (intermediateCount == 0) {
             view.plotIntermediate();
-            intermediateCount = 5;
+            intermediateCount = intermediateInterval;
         } else {
             intermediateCount--;
         }
 
+        if (inputs.isDriftTriggered()) {
+            setNewTargets();
+        }
+
         outputs.writeOutputs(model);
+    }
+
+    public void setNewTargets() {
+        interpolationController.setNewTargets(model);
     }
 
 }

@@ -50,12 +50,6 @@ public class SwirlModel implements IndexedDoubleBiConsumer {
         }
     }
 
-    public void getCartesian(int activeSize, IndexedDoubleBiConsumer consumer) {
-        for (int i=0; i<activeSize; i++) {
-            consumer.accept(i, values[i].getCartesianX(), values[i].getCartesianY());
-        }
-    }
-
     public void adjustSpeed(double ratio) {
         double reciprocal = 1.0 / ratio;
         for (PolarInterpolator interpolator : interpolators) {

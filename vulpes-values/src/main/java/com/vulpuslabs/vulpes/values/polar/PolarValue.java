@@ -1,9 +1,11 @@
 package com.vulpuslabs.vulpes.values.polar;
 
 import com.vulpuslabs.vulpes.values.FakeTrig;
+import com.vulpuslabs.vulpes.values.ranges.Range;
 
 public class PolarValue {
 
+    private static final Range RADIUS_BOUND = Range.CV_BIPOLAR;
     private double angle;
     private double radius;
     private double xValue;
@@ -12,6 +14,7 @@ public class PolarValue {
     public PolarValue(double angle, double radius) {
         this.angle = angle;
         this.radius = radius;
+        updateCartesian();
     }
 
     public void set(double angle, double radius) {
@@ -22,11 +25,8 @@ public class PolarValue {
 
     public void move(double angleDelta, double radiusDelta) {
         angle += angleDelta;
-        angle -= (int) angle;
-        if (angle < 0.0) {
-            angle = 1.0 - angle;
-        }
-        radius += radiusDelta;
+        angle -= Math.floor(angle);
+        radius = RADIUS_BOUND.clamp(radius + radiusDelta);
         updateCartesian();
     }
 

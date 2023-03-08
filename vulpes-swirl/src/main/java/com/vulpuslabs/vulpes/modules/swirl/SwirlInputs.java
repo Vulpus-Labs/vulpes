@@ -1,6 +1,7 @@
 package com.vulpuslabs.vulpes.modules.swirl;
 
 import com.vulpuslabs.vulpes.values.api.DoubleTransformer;
+import com.vulpuslabs.vulpes.values.inputs.TriggerInput;
 import com.vulpuslabs.vulpes.values.ranges.Range;
 import com.vulpuslabs.vulpes.values.smoothed.SmoothedValue;
 
@@ -13,26 +14,24 @@ public class SwirlInputs {
     private final DoubleSupplier[] angleInputs;
     private final DoubleSupplier[] radiusInputs;
     private final DoubleSupplier thetaDriveInput;
-    private final double[] angles;
-    private final double[] radii;
+    private final TriggerInput driftTrigger;
     private final int maxSize;
     private int activeSize;
     private double drive;
     private double driveMod;
     private boolean driveModConnected;
-    private final SmoothedValue.Supplier driveSupplier = SmoothedValue.smooth(this::getDrive, 15);
+    private final SmoothedValue.Supplier driveSupplier = SmoothedValue.smooth(this::getDrive, 0.1);
     private DoubleTransformer radiusRangeTransformer = Range.CV_BIPOLAR.clampTo(Range.CV_UNIPOLAR);
 
-    public SwirlInputs(DoubleSupplier randomSource, DoubleSupplier thetaDriveInput, int maxSize, int activeSize) {
+    public SwirlInputs(DoubleSupplier randomSource, DoubleSupplier thetaDriveInput, DoubleSupplier driftTriggerInput, int maxSize, int activeSize) {
         this.randomSource = randomSource;
         this.thetaDriveInput = Range.CV_BIPOLAR.clampTo(Range.UNIT_BIPOLAR)
                 .transforming(thetaDriveInput);
+        this.driftTrigger = new TriggerInput(driftTriggerInput);
         this.maxSize = maxSize;
         this.activeSize = activeSize;
         this.angleInputs = new DoubleSupplier[maxSize];
         this.radiusInputs = new DoubleSupplier[maxSize];
-        this.angles = new double[maxSize];
-        this.radii = new double[maxSize];
     }
 
     public void connectAngles(IntFunction<DoubleSupplier> angleSupplier) {
@@ -45,6 +44,10 @@ public class SwirlInputs {
         for (int i=0; i<maxSize; i++) {
             radiusInputs[i] = radiusSupplier.apply(i);
         }
+    }
+
+    public void setDriftTriggerIsConnected(boolean isConnected) {
+        driftTrigger.setIsConnected(isConnected);
     }
 
     public void setRadiusBipolar(boolean radiusBipolar) {
@@ -114,5 +117,9 @@ public class SwirlInputs {
                     driveVal * angleInputs[i].getAsDouble(),
                     radiusRangeTransformer.apply(radiusInputs[i].getAsDouble()));
         }
+    }
+
+    public boolean isDriftTriggered() {
+        return driftTrigger.hasTriggered();
     }
 }

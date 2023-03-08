@@ -5,78 +5,41 @@ import java.util.function.DoubleSupplier;
 
 public class SmoothedValue implements DoubleConsumer, DoubleSupplier {
 
-    public static Supplier smooth(DoubleSupplier unsmoothed, int durationMs) {
-        return new Supplier(unsmoothed, durationMs);
+    private static final double UI_KNOB_DECAY_RATE = 0.005;
+
+    public static SmoothedValue uiKnob() {
+        return new SmoothedValue(UI_KNOB_DECAY_RATE);
     }
 
-    private final int durationSamples;
-    private final double reciprocal;
-    private double current;
-    private double distance;
-    private double target;
-    private double delta;
-    private double deltaSig;
-    private int samplesRemaining;
+    public static Supplier smooth(DoubleSupplier unsmoothed, double decayRate) {
+        return new Supplier(unsmoothed, decayRate);
+    }
 
-    public SmoothedValue(int durationMs) {
-        this.durationSamples = durationMs * 48;
-        this.reciprocal = 1.0 / durationSamples;
+    private double a0;
+    private double b1;
+    private double x;
+    private double y1;
+
+    public SmoothedValue(double decayRate) {
+        this.a0 = decayRate;
+        this.b1 = 1.0 - a0;
+    }
+
+    public void setDecayRate(double decayRate) {
+        this.a0 = decayRate;
+        this.b1 = 1.0 - a0;
     }
 
     @Override
     public void accept(double value) {
-        // No change
-        if (value == this.target) {
-            return;
-        }
-
-        // Finished moving
-        var newDistance = value - current;
-        var newDeltaSig = Math.signum(newDistance);
-
-        if (samplesRemaining == 0) {
-            target = value;
-            deltaSig = newDeltaSig;
-            samplesRemaining = durationSamples;
-            distance = newDistance;
-            delta = newDistance * reciprocal;
-            return;
-        }
-
-        // Already in motion: retarget
-        if (Math.abs(newDistance) < Math.abs(distance)) {
-            if (newDeltaSig != deltaSig) {
-                delta -= delta;
-                deltaSig = newDeltaSig;
-            }
-            distance = newDistance;
-            target = value;
-            return;
-        }
-
-        target = value;
-        deltaSig = newDeltaSig;
-        distance = newDistance;
-        samplesRemaining = durationSamples;
-        delta = newDistance * reciprocal;
+        x = value;
     }
 
     @Override
     public double getAsDouble() {
-        if (samplesRemaining == 0) {
-            return target;
-        }
-
-        if (Math.abs(distance) < Math.abs(delta)) {
-            samplesRemaining = 0;
-            current = target;
-            return current;
-        }
-
-        samplesRemaining -= 1;
-        current += delta;
-        distance -= delta;
-        return current;
+        var y = (a0 * x) + (b1 * y1);
+        y1 = y;
+        return y;
     }
 
     public static class Supplier implements DoubleSupplier {
@@ -84,9 +47,13 @@ public class SmoothedValue implements DoubleConsumer, DoubleSupplier {
         private DoubleSupplier unsmoothed;
         private final SmoothedValue smoothed;
 
-        public Supplier(DoubleSupplier unsmoothed, int durationMs) {
+        public Supplier(DoubleSupplier unsmoothed, double a0) {
             this.unsmoothed = unsmoothed;
-            smoothed = new SmoothedValue(durationMs);
+            smoothed = new SmoothedValue(a0);
+        }
+
+        public void setDecayRate(double decayRate) {
+            smoothed.setDecayRate(decayRate);
         }
 
         public void setUnsmoothed(DoubleSupplier unsmoothed) {

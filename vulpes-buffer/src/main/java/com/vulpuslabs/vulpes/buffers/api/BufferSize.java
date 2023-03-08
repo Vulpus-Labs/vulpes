@@ -26,11 +26,13 @@ public enum BufferSize {
 
     private int exponent;
     private int size;
+    private double sizeReciprocal;
     private int lastIndex;
 
     BufferSize(int exponent) {
         this.exponent = exponent;
         this.size = 1 << exponent;
+        this.sizeReciprocal = 1.0 / size;
         this.lastIndex = size - 1;
     }
 
@@ -47,16 +49,7 @@ public enum BufferSize {
     }
 
     public double wrap(double value) {
-        int whole = (int) value;
-        double fractional = value - whole;
-        int wholeMod = whole & lastIndex;
-        if (fractional == 0) {
-            return wholeMod;
-        }
-
-        return (wholeMod == 0 && fractional < 0.0)
-                ? size + fractional
-                : wholeMod + fractional;
+        return value - size * Math.floor(value * sizeReciprocal);
     }
 
 }

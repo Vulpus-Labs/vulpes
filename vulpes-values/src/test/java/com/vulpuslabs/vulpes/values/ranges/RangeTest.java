@@ -3,6 +3,7 @@ package com.vulpuslabs.vulpes.values.ranges;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class RangeTest {
 
@@ -18,7 +19,38 @@ public class RangeTest {
         assertNear(0.7, transform.apply(6.0));
     }
 
+    @Test
+    public void clamping() {
+        var range = new Range(-5.0, 5.0);
+
+        assertNear(-5.0, range.clamp(-5.1));
+        assertNear(-4.0, range.clamp(-4.0));
+        assertNear(4.0, range.clamp(4.0));
+        assertNear(5.0, range.clamp(5.1));
+
+        range = new Range(0.0, 7.0);
+        assertNear(0.0, range.clamp(-0.1));
+        assertNear(0.0, range.clamp(0.0));
+        assertNear(4.0, range.clamp(4.0));
+        assertNear(7.0, range.clamp(7.1));
+
+        range = new Range(-7.0, 0.0);
+        assertNear(-7.0, range.clamp(-7.1));
+        assertNear(-7.0, range.clamp(-7.0));
+        assertNear(-3.0, range.clamp(-3.0));
+        assertNear(0.0, range.clamp(0.1));
+
+        range = new Range(-5.0, 6.0);
+
+        assertNear(-5.0, range.clamp(-5.1));
+        assertNear(-4.0, range.clamp(-4.0));
+        assertNear(4.0, range.clamp(4.0));
+        assertNear(6.0, range.clamp(6.1));
+    }
+
     private void assertNear(double expected, double actual) {
-        assertTrue(Math.abs(expected - actual) < 1e-15);
+        if(Math.abs(expected - actual) > 1e-15) {
+            fail("Expected " + expected + " but was " + actual);
+        }
     }
 }

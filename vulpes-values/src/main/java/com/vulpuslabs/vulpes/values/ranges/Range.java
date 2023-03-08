@@ -13,19 +13,36 @@ public class Range {
     private final double lowerBound;
     private final double upperBound;
     private final double size;
+    private final DoubleTransformer clamper;
 
     public Range(double lowerBound, double upperBound) {
         this.lowerBound = lowerBound;
         this.upperBound = upperBound;
         this.size = upperBound - lowerBound;
+        if (lowerBound == -upperBound) {
+            clamper = (value) -> 0.5 * (Math.abs(value + upperBound) - Math.abs(value + lowerBound) );
+        } else if (lowerBound == 0) {
+            clamper = (value) -> 0.5 * (Math.abs(value) - Math.abs(value - upperBound) + upperBound);
+        } else if (upperBound == 0) {
+            clamper = (value) -> 0.5 * (Math.abs(value - lowerBound) - Math.abs(value) + lowerBound);
+        } else {
+            clamper = (value) -> Math.max(lowerBound, Math.min(upperBound, value));
+        }
     }
 
     public double clamp(double value) {
-        return Math.min(upperBound, Math.max(lowerBound, value));
+        return clamper.apply(value);
     }
 
     public DoubleTransformer clamper() {
-        return this::clamp;
+        return clamper;
+    }
+
+    public DoubleTransformer to(double otherLowerBound, double otherUpperBound) {
+        final var otherSize = otherUpperBound - otherLowerBound;
+        final var scaling = otherSize / size;
+        final var boundShift = otherLowerBound - (lowerBound * scaling);
+        return (value) -> boundShift + (value * scaling);
     }
 
     public DoubleTransformer to(Range targetRange) {
@@ -37,7 +54,7 @@ public class Range {
     public DoubleTransformer clampTo(Range targetRange) {
         var scaling = targetRange.size / this.size;
         var boundShift = targetRange.lowerBound - (lowerBound * scaling);
-        return (value) -> boundShift + (clamp(value) * scaling);
+        return clamper.andThen((value) -> boundShift + (value * scaling));
     }
 
     public double getLowerBound() {
@@ -46,5 +63,9 @@ public class Range {
 
     public double getUpperBound() {
         return upperBound;
+    }
+
+    public double getCentre() {
+        return 0.5 * (lowerBound + upperBound);
     }
 }
