@@ -1,8 +1,9 @@
 package com.vulpuslabs.vulpes.values.inputs;
 
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
-public class TriggerInput {
+public class TriggerInput implements BooleanSupplier {
 
     private final DoubleSupplier input;
     private boolean isConnected;
@@ -17,15 +18,17 @@ public class TriggerInput {
     }
 
     public boolean hasTriggered() {
-        if (!isConnected) {
-            return false;
-        }
-        boolean isTriggering = input.getAsDouble() > 0.0;
+        boolean isTriggering = (isConnected && input.getAsDouble() > 0.0);
         if (isTriggering &! wasTriggering) {
             wasTriggering = true;
             return true;
         }
         wasTriggering = isTriggering;
         return false;
+    }
+
+    @Override
+    public boolean getAsBoolean() {
+        return hasTriggered();
     }
 }

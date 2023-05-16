@@ -1,6 +1,6 @@
 package com.vulpuslabs.vulpes.values.stereo;
 
-import static com.vulpuslabs.vulpes.values.FakeTrig.fakeCosUnit;
+import static com.vulpuslabs.vulpes.values.Approximate.cosUnit;
 
 public class Pan {
 
@@ -8,7 +8,7 @@ public class Pan {
     private double right = 1.0;
 
     public void set(double balance) {
-        var curve = fakeCosUnit(0.5 * balance);
+        var curve = cosUnit(0.5 * balance);
         var absCurve = Math.abs(curve);
         var rclamp = 0.5 * (absCurve - Math.abs(curve - 1.0) + 1.0);
         var lclamp = 0.5 * (Math.abs(curve + 1.0) - absCurve - 1.0);

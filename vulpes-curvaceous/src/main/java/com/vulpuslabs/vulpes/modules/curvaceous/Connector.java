@@ -1,0 +1,77 @@
+package com.vulpuslabs.vulpes.modules.curvaceous;
+
+import com.vulpuslabs.vulpes.values.events.UIEventConnector;
+import com.vulpuslabs.vulpes.values.inputs.InputOrKnob;
+
+public class Connector {
+
+    private final UIEventConnector connector;
+
+    public Connector(UIEventConnector connector) {
+        this.connector = connector;
+    }
+
+    public CurveControl.Segment startSegment(Object yIn,
+                                        Object yKnob,
+                                        Object curveKnob) {
+        InputOrKnob y = InputOrKnob.connect(connector, yIn, yKnob);
+        CurveControl.Segment segment = new CurveControl.Segment(() -> -5.0, y);
+        connector.connectUnsmoothedKnob(curveKnob, segment::setCurveType);
+
+        return segment;
+    }
+
+    public CurveControl.Segment endSegment(Object yIn,
+                                             Object yKnob) {
+        InputOrKnob y = InputOrKnob.connect(connector, yIn, yKnob);
+        CurveControl.Segment segment = new CurveControl.Segment(() -> 5.0, y);
+        segment.setCurveType(CurveType.STEP.getSwitchValue());
+
+        return segment;
+    }
+
+    public CurveControl.Segment segment(Object xIn,
+                                        Object xKnob,
+                                        Object yIn,
+                                        Object yKnob,
+                                        Object curveKnob) {
+        InputOrKnob x = InputOrKnob.connect(connector, xIn, xKnob);
+        InputOrKnob y = InputOrKnob.connect(connector, yIn, yKnob);
+        CurveControl.Segment segment = new CurveControl.Segment(x, y);
+        connector.connectUnsmoothedKnob(curveKnob, segment::setCurveType);
+
+        return segment;
+    }
+
+    public FMControl fmControl(Object fmInputJack,
+                                    Object attenuvertorKnob,
+                                    Object linExpSwitch) {
+        FMControl fmControl = new FMControl(
+                connector.connectMonoInput(fmInputJack),
+                connector.connectSmoothedKnob(attenuvertorKnob));
+
+        connector.getEventBus().registerBooleanObserver(fmInputJack, fmControl::setIsConnected);
+        connector.connectTwoStateSwitch(linExpSwitch, fmControl::setIsExponential);
+
+        return fmControl;
+    }
+
+    public PolyFMControl polyFmControl(Object fmInputJack,
+                                        Object attenuvertorKnob,
+                                        Object linExpSwitch) {
+        PolyFMControl fmControl = new PolyFMControl(
+                connector.connectPolyInput(fmInputJack),
+                connector.connectSmoothedKnob(attenuvertorKnob));
+
+        connector.getEventBus().registerBooleanObserver(fmInputJack, fmControl::setIsConnected);
+        connector.connectTwoStateSwitch(linExpSwitch, fmControl::setIsExponential);
+
+        return fmControl;
+    }
+
+    public SyncControl syncControl(Object syncJack) {
+        SyncControl syncControl = new SyncControl(connector.connectPolyInput(syncJack));
+        connector.getEventBus().registerBooleanObserver(syncJack, syncControl::setIsConnected);
+        return syncControl;
+    }
+}

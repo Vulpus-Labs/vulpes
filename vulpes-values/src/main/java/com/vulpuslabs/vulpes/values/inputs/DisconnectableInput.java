@@ -7,6 +7,7 @@ import java.util.function.DoubleSupplier;
 public class DisconnectableInput implements DoubleSupplier {
 
     private static final DoubleSupplier CONSTANT_ZERO = () -> 0.0;
+    private boolean isConnected;
     private BooleanConsumer onConnectionStatusChanged;
     private final DoubleSupplier inputReader;
     private DoubleSupplier valueSupplier;
@@ -18,8 +19,11 @@ public class DisconnectableInput implements DoubleSupplier {
     }
 
     public void setIsConnected(boolean isConnected) {
-        valueSupplier = isConnected ? inputReader : CONSTANT_ZERO;
-        onConnectionStatusChanged.accept(isConnected);
+        if (this.isConnected != isConnected) {
+            this.isConnected = isConnected;
+            valueSupplier = isConnected ? inputReader : CONSTANT_ZERO;
+            onConnectionStatusChanged.accept(isConnected);
+        }
     }
 
     public DisconnectableInput onConnectionStatusChanged(BooleanConsumer handler) {
@@ -30,5 +34,9 @@ public class DisconnectableInput implements DoubleSupplier {
     @Override
     public double getAsDouble() {
         return valueSupplier.getAsDouble();
+    }
+
+    public boolean isConnected() {
+        return isConnected;
     }
 }

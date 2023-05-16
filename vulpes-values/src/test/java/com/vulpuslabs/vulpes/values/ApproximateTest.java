@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class FakeTrigTest {
+class ApproximateTest {
 
     @Test
     void testFakeCosAccuracy() {
@@ -13,7 +13,7 @@ class FakeTrigTest {
         for (int i=0; i <= 1000; i++) {
             var radians = i  * Math.PI / 500;
             var realCos = Math.cos(radians);
-            var fakeCos = FakeTrig.fakeCos(radians);
+            var fakeCos = Approximate.cosRadians(radians);
             var errAmount = Math.abs(realCos - fakeCos);
             maxError = Math.max(maxError, errAmount);
         }
@@ -28,7 +28,7 @@ class FakeTrigTest {
         for (int i=0; i <= 1000; i++) {
             var radians = i  * Math.PI / 500;
             var realSin = Math.sin(radians);
-            var fakeSin = FakeTrig.fakeSin(radians);
+            var fakeSin = Approximate.sinRadians(radians);
             var errAmount = Math.abs(realSin - fakeSin);
             maxError = Math.max(maxError, errAmount);
         }

@@ -23,14 +23,6 @@ public class BufferBoundedIndex implements IntConsumer, IntSupplier {
         currentValue = bufferSize.wrap(currentValue + bufferSize.getLastIndex());
     }
 
-    public void windBack(int offset) {
-        windBackInto(offset, this);
-    }
-
-    public void windBackInto(int offset, BufferBoundedIndex target) {
-        target.accept(currentValue - offset);
-    }
-
     @Override
     public void accept(int value) {
         currentValue = bufferSize.wrap(value);

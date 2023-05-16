@@ -35,4 +35,10 @@ public final class SampleData {
     public void setSamples(double...samples) {
         System.arraycopy(samples, 0, data, 0, sampleCount.getCount());
     }
+
+    public void add(SampleData other) {
+        for (int i=0; i<sampleCount.getCount(); i++) {
+            data[i] += other.data[i];
+        }
+    }
 }

@@ -7,15 +7,13 @@ import com.vulpuslabs.vulpes.values.inputs.DisconnectableInput;
 import com.vulpuslabs.vulpes.values.outputs.DisconnectableOutput;
 import com.vulpuslabs.vulpes.values.smoothed.SmoothedValue;
 
-import java.util.IdentityHashMap;
-import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
 
 public class NotificationReceiver {
 
-    private final Map<Object, DoubleConsumer> valueObservers = new IdentityHashMap<>();
-    private final Map<Object, BooleanConsumer> statusObservers = new IdentityHashMap<>();
+    private final EventBus eventBus = new EventBus();
 
     public void registerControllableSmoothing(
             Object controller,
@@ -67,29 +65,24 @@ public class NotificationReceiver {
         return output;
     }
 
-    public NotificationReceiver registerTwoStateSwitch(Object component, BooleanConsumer valueObserver) {
-        valueObservers.put(component, (v) -> valueObserver.accept(v == 1.0));
+    public NotificationReceiver registerTwoStateSwitch(Object component, Consumer<TwoPositionSwitchState> valueObserver) {
+        eventBus.registerDoubleObserver(component,
+                TwoPositionSwitchState.toDoubleObserver(valueObserver));
         return this;
     }
 
     public NotificationReceiver register(Object component, DoubleConsumer valueObserver) {
-        valueObservers.put(component, valueObserver);
+        eventBus.registerDoubleObserver(component, valueObserver);
         return this;
     }
 
     public NotificationReceiver register(Object component, BooleanConsumer valueObserver) {
-        statusObservers.put(component, valueObserver);
+        eventBus.registerBooleanObserver(component, valueObserver);
         return this;
     }
 
     private boolean newDoubleValue(Object component, double newValue) {
-        var observer = valueObservers.get(component);
-        if (observer != null) {
-            observer.accept(newValue);
-            return true;
-        } else {
-            return false;
-        }
+        return eventBus.onDouble(component, newValue);
     }
 
     public boolean knobValueChanged(Object component, double newValue) {
@@ -97,26 +90,18 @@ public class NotificationReceiver {
     }
 
     public boolean jackConnected(Object component) {
-        var observer = statusObservers.get(component);
-        if (observer != null) {
-            observer.accept(true);
-            return true;
-        } else {
-            return false;
-        }
+        return eventBus.onBoolean(component, true);
     }
 
     public boolean jackDisconnected(Object component) {
-        var observer = statusObservers.get(component);
-        if (observer != null) {
-            observer.accept(false);
-            return true;
-        } else {
-            return false;
-        }
+        return eventBus.onBoolean(component, false);
     }
 
     public boolean switchChanged(Object component, double newValue) {
+        return newDoubleValue(component, newValue);
+    }
+
+    public boolean buttonChanged(Object component, double newValue) {
         return newDoubleValue(component, newValue);
     }
 }

@@ -26,6 +26,12 @@ public class BufferReadPointer {
         return result;
     }
 
+    public double readNextReverse() {
+        var result = data[index.getAsInt()];
+        index.decrement();
+        return result;
+    }
+
     public void readNext(SampleData target) {
         target.readFrom(data, index.getAsInt() << sampleCount.getShift());
         index.increment();

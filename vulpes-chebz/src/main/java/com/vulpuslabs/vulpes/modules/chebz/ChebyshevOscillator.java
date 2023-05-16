@@ -1,6 +1,6 @@
 package com.vulpuslabs.vulpes.modules.chebz;
 
-import com.vulpuslabs.vulpes.values.FakeTrig;
+import com.vulpuslabs.vulpes.values.Approximate;
 
 public class ChebyshevOscillator {
 
@@ -12,7 +12,7 @@ public class ChebyshevOscillator {
     }
 
     public void getSamplesAt(double position, double[] data) {
-        var x = FakeTrig.fakeCosUnit(position);
+        var x = Approximate.cosUnit(position);
         var twoX = x * 2.0;
         data[0] = x;
         data[1] = (twoX * data[0]) - 1.0;

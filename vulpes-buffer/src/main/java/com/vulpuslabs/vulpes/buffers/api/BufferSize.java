@@ -48,8 +48,4 @@ public enum BufferSize {
         return value & lastIndex;
     }
 
-    public double wrap(double value) {
-        return value - size * Math.floor(value * sizeReciprocal);
-    }
-
 }

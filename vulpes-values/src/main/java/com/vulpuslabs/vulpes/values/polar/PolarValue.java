@@ -1,6 +1,6 @@
 package com.vulpuslabs.vulpes.values.polar;
 
-import com.vulpuslabs.vulpes.values.FakeTrig;
+import com.vulpuslabs.vulpes.values.Approximate;
 import com.vulpuslabs.vulpes.values.ranges.Range;
 
 public class PolarValue {
@@ -31,8 +31,8 @@ public class PolarValue {
     }
 
     private void updateCartesian() {
-        xValue = radius * FakeTrig.fakeCosUnit(angle);
-        yValue = radius * FakeTrig.fakeSinUnit(angle);
+        xValue = radius * Approximate.cosUnit(angle);
+        yValue = radius * Approximate.sinUnit(angle);
     }
 
     public double getCartesianX() {

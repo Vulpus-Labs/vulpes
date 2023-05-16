@@ -1,5 +1,6 @@
 package com.vulpuslabs.vulpes.buffers;
 
+import com.vulpuslabs.vulpes.buffers.api.BufferRandomAccess;
 import com.vulpuslabs.vulpes.buffers.api.BufferSize;
 import com.vulpuslabs.vulpes.buffers.api.SampleCount;
 
@@ -30,7 +31,7 @@ public class Buffer {
         writeIndex.increment();
     }
 
-    void writeNext(SampleData sampleData) {
+    public void writeNext(SampleData sampleData) {
         sampleData.writeTo(data, writeIndex.getAsInt() << sampleCount.getShift());
         writeIndex.increment();
     }

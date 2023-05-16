@@ -1,6 +1,6 @@
 package com.vulpuslabs.vulpes.modules.swirl;
 
-import com.vulpuslabs.vulpes.values.FakeTrig;
+import com.vulpuslabs.vulpes.values.Approximate;
 import com.vulpuslabs.vulpes.values.polar.PolarValue;
 
 import javax.imageio.ImageIO;
@@ -178,8 +178,8 @@ public class Graphics2dSwirlView implements SwirlView {
             g.drawLine(
                     centreX,
                     centreY,
-                    (int) (centreX + (outerRadius * FakeTrig.fakeCosUnit(angle))),
-                    (int) (centreY + (outerRadius * FakeTrig.fakeSinUnit(angle))));
+                    (int) (centreX + (outerRadius * Approximate.cosUnit(angle))),
+                    (int) (centreY + (outerRadius * Approximate.sinUnit(angle))));
             angle += angleDelta;
         }
 
