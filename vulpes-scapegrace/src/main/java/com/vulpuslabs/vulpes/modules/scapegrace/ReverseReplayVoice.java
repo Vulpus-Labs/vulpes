@@ -1,8 +1,5 @@
 package com.vulpuslabs.vulpes.modules.scapegrace;
 
-import com.vulpuslabs.vulpes.buffers.BufferReadPointer;
-import com.vulpuslabs.vulpes.buffers.SampleData;
-
 public class ReverseReplayVoice implements ReplayVoice {
 
     private final int sampleLength;

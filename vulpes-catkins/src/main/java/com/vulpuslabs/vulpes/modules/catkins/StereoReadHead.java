@@ -1,19 +1,14 @@
 package com.vulpuslabs.vulpes.modules.catkins;
 
-import com.vulpuslabs.vulpes.buffers.SampleData;
-import com.vulpuslabs.vulpes.buffers.api.BufferRandomAccess;
-import com.vulpuslabs.vulpes.buffers.api.SampleCount;
+import com.vulpuslabs.vulpes.buffers.stereo.StereoBufferFractionalReader;
+import com.vulpuslabs.vulpes.buffers.stereo.StereoSample;
 import com.vulpuslabs.vulpes.values.api.DoubleTransformer;
 import com.vulpuslabs.vulpes.values.inputs.DisconnectableInput;
 import com.vulpuslabs.vulpes.values.outputs.DisconnectableOutput;
 import com.vulpuslabs.vulpes.values.ranges.Range;
 
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
-
-import static com.vulpuslabs.vulpes.values.api.stereo.Stereo.LEFT;
-import static com.vulpuslabs.vulpes.values.api.stereo.Stereo.RIGHT;
 
 public class StereoReadHead {
 
@@ -24,14 +19,13 @@ public class StereoReadHead {
     private final DisconnectableInput receiveLeft;
     private final DisconnectableInput receiveRight;
     private DoubleSupplier modulatedOffset;
-    private Consumer<BufferRandomAccess> sendAction;
+    private Consumer<StereoBufferFractionalReader> sendAction;
     private boolean isModulating;
     private DoubleTransformer posRange;
     private DoubleTransformer modRange;
     private boolean isLeftConnected;
     private boolean isRightConnected;
-    private final SampleData stereoData = new SampleData(SampleCount.STEREO);
-    private final SampleData[] readBuffer = new SampleData[4];
+    private final StereoSample stereoSample = new StereoSample();
 
     public StereoReadHead(
             DoubleSupplier offset,
@@ -53,25 +47,20 @@ public class StereoReadHead {
         sendRight.onConnectionStatusChanged(this::sendRightConnectionStatusChanged);
         offsetMod.onConnectionStatusChanged(this::offsetModConnectionStatusChanged);
 
-        for (int i=0; i<4; i++) {
-            readBuffer[i] = new SampleData(SampleCount.STEREO);
-        }
         setRange(10);
     }
 
-    public void processSample(BufferRandomAccess buffer, SampleData target) {
+    public void processSample(StereoBufferFractionalReader buffer, StereoSample target) {
         sendAction.accept(buffer);
-        target.setSample(LEFT, target.getSample(LEFT) + receiveLeft.getAsDouble());
-        target.setSample(RIGHT, target.getSample(RIGHT) + receiveRight.getAsDouble());
+        target.add(receiveLeft.getAsDouble(), receiveRight.getAsDouble());
     }
 
-    private void sendConnected(BufferRandomAccess buffer) {
-        buffer.getSampleAtOffset(modulatedOffset.getAsDouble(), readBuffer, stereoData);
-        sendLeft.accept(stereoData.getSample(LEFT));
-        sendRight.accept(stereoData.getSample(RIGHT));
+    private void sendConnected(StereoBufferFractionalReader reader) {
+        reader.read(modulatedOffset.getAsDouble(), stereoSample);
+        stereoSample.writeTo(sendLeft, sendRight);
     }
 
-    private void sendDisconnected(BufferRandomAccess buffer) {
+    private void sendDisconnected(StereoBufferFractionalReader reader) {
         // do nothing;
     }
 

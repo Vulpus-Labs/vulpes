@@ -1,15 +1,14 @@
 package com.vulpuslabs.vulpes.modules.scapegrace;
 
-import com.vulpuslabs.vulpes.buffers.Buffer;
 import com.vulpuslabs.vulpes.buffers.api.BufferSize;
-import com.vulpuslabs.vulpes.buffers.api.SampleCount;
+import com.vulpuslabs.vulpes.buffers.stereo.StereoBuffer;
 
 import java.util.function.DoubleSupplier;
 
 public class Controller {
 
     private final InputBus inputBus;
-    private final Buffer buffer = new Buffer(BufferSize.BUFFER_1m, SampleCount.STEREO);
+    private final StereoBuffer buffer = new StereoBuffer(BufferSize.BUFFER_1m);
     private final ReplayVoiceSet replayVoices = new ReplayVoiceSet();
 
     public Controller(InputBus inputBus) {

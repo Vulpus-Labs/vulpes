@@ -1,22 +1,15 @@
 package com.vulpuslabs.vulpes.modules.catkins;
 
-import com.vulpuslabs.vulpes.buffers.Buffer;
-import com.vulpuslabs.vulpes.buffers.FancyBufferRandomAccess;
-import com.vulpuslabs.vulpes.buffers.LinearInterpolatingBufferRandomAccess;
-import com.vulpuslabs.vulpes.buffers.SampleData;
-import com.vulpuslabs.vulpes.buffers.api.BufferRandomAccess;
 import com.vulpuslabs.vulpes.buffers.api.BufferSize;
-import com.vulpuslabs.vulpes.buffers.api.SampleCount;
-import com.vulpuslabs.vulpes.buffers.api.Stereo;
+import com.vulpuslabs.vulpes.buffers.stereo.StereoBuffer;
+import com.vulpuslabs.vulpes.buffers.stereo.StereoBufferFractionalReader;
+import com.vulpuslabs.vulpes.buffers.stereo.StereoSample;
 import com.vulpuslabs.vulpes.values.events.TwoPositionSwitchState;
 import com.vulpuslabs.vulpes.values.inputs.DisconnectableInput;
 
 import java.text.NumberFormat;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
-
-import static com.vulpuslabs.vulpes.values.api.stereo.Stereo.LEFT;
-import static com.vulpuslabs.vulpes.values.api.stereo.Stereo.RIGHT;
 
 public class StereoController {
 
@@ -43,15 +36,15 @@ public class StereoController {
     private final DoubleConsumer outputRight;
     private final StereoReadHead[] readHeads;
 
-    private final Buffer buffer;
-    private BufferRandomAccess bufferRandomAccess;
+    private final StereoBuffer buffer;
+
+    private StereoBufferFractionalReader bufferReader;
 
     private final StereoFeedbackCircuit feedbackCircuit;
-    private final double[] stereoData = new double[2];
 
-    private final SampleData inputData = new SampleData(SampleCount.STEREO);
-    private final SampleData feedbackData = new SampleData(SampleCount.STEREO);
-    private final SampleData outputData = new SampleData(SampleCount.STEREO);
+    private final StereoSample inputData = new StereoSample();
+    private final StereoSample feedbackData = new StereoSample();
+    private final StereoSample outputData = new StereoSample();
 
     public StereoController(DoubleSupplier inputLeft,
                             DisconnectableInput inputRight,
@@ -66,15 +59,15 @@ public class StereoController {
         this.mixAmount = mixAmount;
         this.outputLeft = outputLeft;
         this.outputRight = outputRight;
-        this.buffer = new Buffer(BufferSize.BUFFER_1m, SampleCount.STEREO);
-        bufferRandomAccess = new LinearInterpolatingBufferRandomAccess(buffer);
+        this.buffer = new StereoBuffer(BufferSize.BUFFER_1m);
+        this.bufferReader = this.buffer::readFractional;
         this.readHeads = readHeads;
     }
 
     public void setInterpolationQuality(TwoPositionSwitchState switchState) {
-        bufferRandomAccess = switchState == TwoPositionSwitchState.OFF
-                ? new FancyBufferRandomAccess(buffer)
-                : new LinearInterpolatingBufferRandomAccess(buffer);
+        bufferReader = switchState == TwoPositionSwitchState.OFF
+                ? buffer::readFractionalHermite
+                : buffer::readFractional;
     }
 
     public void setRange(double switchValue) {
@@ -97,31 +90,22 @@ public class StereoController {
     }
 
     public void processSample() {
-        inputData.setSample(LEFT, inputLeft.getAsDouble());
-        inputData.setSample(RIGHT, inputRight.isConnected() ?
-                inputRight.getAsDouble()
-                : inputData.getSample(LEFT));
+        double leftInput = inputLeft.getAsDouble();
+        inputData.set(leftInput,
+            inputRight.isConnected() ? inputRight.getAsDouble() : leftInput);
 
         feedbackCircuit.getAsStereo(feedbackData);
         inputData.add(feedbackData);
-        buffer.writeNext(inputData);
+        buffer.write(inputData);
 
-        outputData.setSample(LEFT, 0.0);
-        outputData.setSample(RIGHT, 0.0);
+        outputData.set(0.0, 0.0);
 
         for (StereoReadHead readHead : readHeads) {
-            readHead.processSample(bufferRandomAccess, outputData);
+            readHead.processSample(bufferReader, outputData);
         }
 
         feedbackCircuit.accept(outputData);
-
-        double wetAmount = mixAmount.getAsDouble();
-        double dryAmount = 1.0 - wetAmount;
-
-        outputLeft.accept(inputData.getSample(LEFT) * dryAmount
-                + outputData.getSample(LEFT) * wetAmount);
-        outputRight.accept(inputData.getSample(RIGHT) * dryAmount
-                + outputData.getSample(RIGHT) * wetAmount);
-
+        inputData.mix(outputData, mixAmount.getAsDouble());
+        inputData.writeTo(outputLeft, outputRight);
     }
 }

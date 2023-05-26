@@ -1,7 +1,5 @@
 package com.vulpuslabs.vulpes.modules.scapegrace;
 
-import com.vulpuslabs.vulpes.buffers.SampleData;
-
 public class DoubleSpeedReplayVoice implements ReplayVoice {
 
     private final int sampleLength;

@@ -1,7 +1,8 @@
 package com.vulpuslabs.vulpes.modules.cumulonimbus;
 
-import com.vulpuslabs.vulpes.buffers.api.BufferRandomAccess;
-import com.vulpuslabs.vulpes.values.api.DoubleTransformer;
+import com.vulpuslabs.vulpes.buffers.stereo.StereoBuffer;
+import com.vulpuslabs.vulpes.buffers.stereo.StereoSample;
+import com.vulpuslabs.vulpes.values.Approximate;
 
 public class Granule {
 
@@ -9,37 +10,39 @@ public class Granule {
     private double delta;
     private int count;
 
-    private double curvePos;
+    private int fadeSamples;
+    private int fadeCount;
+    private double fade;
+    private double fadeDelta;
 
-    private double curveDelta;
-
-    public void initialise(double startPos, double endPos, int count) {
+    public void initialise(double startPos, double endPos, int count, double fadePercent) {
         pos = startPos;
-        curveDelta = 1.0 / count;
-        delta = (endPos - startPos) * curveDelta;
-        curvePos = 0;
+        delta = (endPos - startPos) / count;
         this.count = count;
+
+        fadeSamples = (int) Math.ceil(count * fadePercent * 0.5);
+        fadeCount = fadeSamples;
+        fade = 0;
+        fadeDelta = 1.0 / fadeSamples;
     }
 
-    public void copyFrom(Granule other) {
-        this.pos = other.pos;
-        this.delta = other.delta;
-        this.count = other.count;
-        this.curvePos = other.curvePos;
-        this.curveDelta = other.curveDelta;
-    }
-
-    public double nextSample(BufferRandomAccess bufferRandomAccess, GranuleCurve curve) {
-        // Get sample
-        double sample = curve.apply(
-                bufferRandomAccess.getSampleAtOffset(pos),
-                curvePos);
+    public void nextSample(StereoBuffer buffer, StereoSample sample, double freezeDelta) {
+        buffer.readFractional(pos, sample);
+        sample.multiply(Approximate.sinusoid(fade));
 
         pos += delta;
-        curvePos += curveDelta;
+        pos += freezeDelta;
         count--;
 
-        return sample;
+        if (count == fadeSamples) {
+            fadeDelta = -fadeDelta;
+            fadeCount = count;
+        }
+
+        if (fadeCount > 0) {
+            fade += fadeDelta;
+            fadeCount--;
+        }
     }
 
     public boolean isFinished() {

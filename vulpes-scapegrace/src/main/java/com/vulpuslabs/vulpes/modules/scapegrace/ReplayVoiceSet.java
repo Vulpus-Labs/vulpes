@@ -1,6 +1,6 @@
 package com.vulpuslabs.vulpes.modules.scapegrace;
 
-import com.vulpuslabs.vulpes.buffers.SampleData;
+import com.vulpuslabs.vulpes.buffers.stereo.StereoSample;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -9,7 +9,7 @@ import java.util.function.Consumer;
 import static com.vulpuslabs.vulpes.buffers.api.Stereo.LEFT;
 import static com.vulpuslabs.vulpes.buffers.api.Stereo.RIGHT;
 
-public class ReplayVoiceSet implements Consumer<SampleData> {
+public class ReplayVoiceSet implements Consumer<StereoSample> {
 
     private final LinkedList<ReplayVoice> voices = new LinkedList<>();
 
@@ -22,20 +22,14 @@ public class ReplayVoiceSet implements Consumer<SampleData> {
     }
 
     @Override
-    public void accept(SampleData sampleData) {
-        var left = 0.0;
-        var right = 0.0;
+    public void accept(StereoSample sampleData) {
+
 
         Iterator<ReplayVoice> iterator = voices.iterator();
         while (iterator.hasNext()) {
             ReplayVoice voice = iterator.next();
             voice.accept(sampleData);
-            left += sampleData.getSample(LEFT);
-            right += sampleData.getSample(RIGHT);
             if (voice.isFinished()) iterator.remove();
         }
-
-        sampleData.setSample(LEFT, left);
-        sampleData.setSample(RIGHT, right);
     }
 }

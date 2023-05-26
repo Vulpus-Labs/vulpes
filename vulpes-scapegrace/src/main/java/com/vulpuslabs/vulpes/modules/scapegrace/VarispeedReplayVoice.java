@@ -1,6 +1,5 @@
 package com.vulpuslabs.vulpes.modules.scapegrace;
 
-import com.vulpuslabs.vulpes.buffers.SampleData;
 import com.vulpuslabs.vulpes.buffers.api.SampleCount;
 
 import static com.vulpuslabs.vulpes.buffers.api.Stereo.LEFT;

@@ -1,12 +1,13 @@
 package com.vulpuslabs.vulpes.modules.scapegrace;
 
-import com.vulpuslabs.vulpes.buffers.BufferReadPointer;
-import com.vulpuslabs.vulpes.buffers.SampleData;
+import java.nio.Buffer;
 
 public class BufferSectionReplayVoice implements ReplayVoice {
 
     private final int sampleLength;
-    private final BufferReadPointer pointer;
+    private final Buffer buffer;
+
+    private final double offset;
     private int replayCount;
 
     public BufferSectionReplayVoice(int samples, BufferReadPointer pointer) {

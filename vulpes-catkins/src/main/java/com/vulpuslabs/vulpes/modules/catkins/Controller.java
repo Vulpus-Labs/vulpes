@@ -1,11 +1,9 @@
 package com.vulpuslabs.vulpes.modules.catkins;
 
-import com.vulpuslabs.vulpes.buffers.Buffer;
-import com.vulpuslabs.vulpes.buffers.FancyBufferRandomAccess;
-import com.vulpuslabs.vulpes.buffers.api.BufferRandomAccess;
 import com.vulpuslabs.vulpes.buffers.api.BufferSize;
-import com.vulpuslabs.vulpes.buffers.LinearInterpolatingBufferRandomAccess;
-import com.vulpuslabs.vulpes.buffers.api.SampleCount;
+import com.vulpuslabs.vulpes.buffers.mono.MonoBuffer;
+import com.vulpuslabs.vulpes.values.api.DoubleTransformer;
+import com.vulpuslabs.vulpes.values.events.TwoPositionSwitchState;
 
 import java.text.NumberFormat;
 import java.util.function.DoubleConsumer;
@@ -34,8 +32,9 @@ public class Controller {
     private final DoubleConsumer output;
     private final ReadHead[] readHeads;
 
-    private final Buffer buffer;
-    private BufferRandomAccess bufferRandomAccess;
+    private final MonoBuffer buffer;
+
+    private DoubleTransformer bufferReader;
 
     private final FeedbackCircuit feedbackCircuit;
 
@@ -48,15 +47,15 @@ public class Controller {
         this.feedbackCircuit = new FeedbackCircuit(feedbackAmount);
         this.mixAmount = mixAmount;
         this.output = output;
-        this.buffer = new Buffer(BufferSize.BUFFER_1m, SampleCount.MONO);
-        bufferRandomAccess = new LinearInterpolatingBufferRandomAccess(buffer);
+        this.buffer = new MonoBuffer(BufferSize.BUFFER_1m);
         this.readHeads = readHeads;
+        this.bufferReader = buffer::readFractional;
     }
 
-    public void setInterpolationQuality(boolean isHighQuality) {
-        bufferRandomAccess = isHighQuality
-                ? new FancyBufferRandomAccess(buffer)
-                : new LinearInterpolatingBufferRandomAccess(buffer);
+    public void setInterpolationQuality(TwoPositionSwitchState switchState) {
+        bufferReader = switchState == TwoPositionSwitchState.ON
+                ? buffer::readFractionalHermite
+                : buffer::readFractional;
     }
 
     public void setRange(double switchValue) {
@@ -81,11 +80,11 @@ public class Controller {
     public void processSample() {
         double inputSample = input.getAsDouble();
 
-        buffer.writeNext(inputSample + feedbackCircuit.getAsDouble());
+        buffer.write(inputSample + feedbackCircuit.getAsDouble());
 
         double wet = 0.0;
         for (ReadHead readHead : readHeads) {
-            wet += readHead.processSample(bufferRandomAccess);
+            wet += readHead.processSample(bufferReader);
         }
 
         feedbackCircuit.accept(wet);

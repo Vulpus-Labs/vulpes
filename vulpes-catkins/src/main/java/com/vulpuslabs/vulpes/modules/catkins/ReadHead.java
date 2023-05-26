@@ -1,12 +1,10 @@
 package com.vulpuslabs.vulpes.modules.catkins;
 
-import com.vulpuslabs.vulpes.buffers.api.BufferRandomAccess;
 import com.vulpuslabs.vulpes.values.api.DoubleTransformer;
 import com.vulpuslabs.vulpes.values.inputs.DisconnectableInput;
 import com.vulpuslabs.vulpes.values.outputs.DisconnectableOutput;
 import com.vulpuslabs.vulpes.values.ranges.Range;
 
-import java.util.function.Consumer;
 import java.util.function.DoubleSupplier;
 
 public class ReadHead {
@@ -16,8 +14,8 @@ public class ReadHead {
     private final DisconnectableOutput send;
     private final DisconnectableInput receive;
     private DoubleSupplier modulatedOffset;
-    private Consumer<BufferRandomAccess> sendAction;
-    private boolean isHighRange;
+
+    private boolean isSending;
     private boolean isModulating;
     private DoubleTransformer posRange;
     private DoubleTransformer modRange;
@@ -32,23 +30,16 @@ public class ReadHead {
         setRange(10);
         this.send = send;
         this.receive = receive;
-        this.sendAction = this::sendDisconnected;
 
         send.onConnectionStatusChanged(this::sendConnectionStatusChanged);
         offsetMod.onConnectionStatusChanged(this::offsetModConnectionStatusChanged);
     }
 
-    public double processSample(BufferRandomAccess buffer) {
-        sendAction.accept(buffer);
+    public double processSample(DoubleTransformer bufferReader) {
+        if (isSending) {
+            send.accept(bufferReader.apply(modulatedOffset.getAsDouble()));
+        }
         return receive.getAsDouble();
-    }
-
-    private void sendConnected(BufferRandomAccess buffer) {
-        send.accept(buffer.getSampleAtOffset(modulatedOffset.getAsDouble()));
-    }
-
-    private void sendDisconnected(BufferRandomAccess buffer) {
-        // do nothing;
     }
 
     private void offsetModConnectionStatusChanged(boolean isConnected) {
@@ -57,7 +48,6 @@ public class ReadHead {
         isModulating = isConnected;
         configureModulatedOffset();
     }
-
 
     public void setRange(double rangeMs) {
         posRange = Range.UNIT_UNIPOLAR
@@ -78,7 +68,7 @@ public class ReadHead {
     }
 
     private void sendConnectionStatusChanged(boolean isConnected) {
-        sendAction = isConnected ? this::sendConnected : this::sendDisconnected;
+        isSending = isConnected;
     }
 
     private double getModulatedOffset() {

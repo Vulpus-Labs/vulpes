@@ -1,50 +1,66 @@
 package com.vulpuslabs.vulpes.modules.cumulonimbus;
 
-import com.vulpuslabs.vulpes.buffers.Buffer;
-import com.vulpuslabs.vulpes.buffers.LinearInterpolatingBufferRandomAccess;
-import com.vulpuslabs.vulpes.buffers.api.BufferRandomAccess;
 import com.vulpuslabs.vulpes.buffers.api.BufferSize;
-import com.vulpuslabs.vulpes.buffers.api.SampleCount;
+import com.vulpuslabs.vulpes.buffers.stereo.StereoBuffer;
+import com.vulpuslabs.vulpes.buffers.stereo.StereoSample;
 import com.vulpuslabs.vulpes.values.Approximate;
 import com.vulpuslabs.vulpes.values.random.RandomDouble;
 
 public class Controller {
 
-    private double offset;
-    private double diffusion;
-    private int length;
-    private double speed;
-    private int requiredSize;
+    private final InputBus inputBus;
+
+    private final OutputBus outputBus;
 
     private final GranuleTable cloud;
-    private final Buffer buffer;
-    private final BufferRandomAccess bufferRandomAccess;
+    private final StereoBuffer buffer;
+
+    private final StereoSample inputSample = new StereoSample();
+    private final StereoSample outputSample = new StereoSample();
 
     private final RandomDouble randomDouble = new RandomDouble(0);
 
-    public Controller(int maxSize) {
+    public Controller(InputBus inputBus, OutputBus outputBus, int maxSize) {
+        this.inputBus = inputBus;
+        this.outputBus = outputBus;
         this.cloud = new GranuleTable(maxSize, this::newGranule);
-        this.buffer = new Buffer(BufferSize.BUFFER_64k, SampleCount.MONO);
-        this.bufferRandomAccess = new LinearInterpolatingBufferRandomAccess(buffer);
+        this.buffer = new StereoBuffer(BufferSize.BUFFER_64k);
     }
 
-    public double processSample(double inputSample) {
-        buffer.writeNext(inputSample);
-        return cloud.readSample(bufferRandomAccess, this::cosCurve, false);
+    public void processSample() {
+        inputBus.readInputs(inputSample);
+        boolean isFrozen = false; // TODO: inputBus.isFrozen();
+
+        if (!isFrozen) {
+            buffer.write(inputSample);
+        }
+
+        cloud.readSample(buffer, outputSample, isFrozen, inputBus.isTriggering());
+
+        inputSample.mix(outputSample, inputBus.getMix());
+
+        inputSample.writeTo(outputBus);
     }
 
-    private double cosCurve(double sample, double pos) {
-        return sample * (1.0 - Approximate.cosUnit(pos));
-    }
+    private static final double ONE_OVER_TWELVE = 1.0 / 12.0;
 
     private void newGranule(Granule granule) {
-        double diffusedOffset = offset + randomDouble.getAsDouble() * diffusion;
+        int lengthSamples = (int) (inputBus.getLengthMs() * 48.0);
+        double positionOffset = inputBus.getPositionMs() * 48.0;
+        double pitchCents = inputBus.getPitchCents();
+        double fadePercent = inputBus.getFadePercent();
 
-        /*
-        Complicated sum. At speed = 1, endPos should be startPos.
-        At speed = 2, endPos should be startPos - length:
-         */
+        double delta = pitchCents * ONE_OVER_TWELVE * lengthSamples;
+        double shiftStart = delta;
+        double shiftEnd = 0.0;
+        if (delta < 0.0) {
+            shiftStart = 0.0;
+            shiftEnd = -delta * 0.5;
+        }
 
-        //granule.initialise(offset + randomDouble.getAsDouble() * diffusion);
+        granule.initialise(positionOffset + shiftStart,
+                positionOffset + shiftEnd,
+                lengthSamples,
+                fadePercent);
     }
 }

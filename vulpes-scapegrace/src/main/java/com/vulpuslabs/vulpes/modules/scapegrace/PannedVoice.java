@@ -1,6 +1,6 @@
 package com.vulpuslabs.vulpes.modules.scapegrace;
 
-import com.vulpuslabs.vulpes.buffers.SampleData;
+import com.vulpuslabs.vulpes.buffers.stereo.StereoSample;
 import com.vulpuslabs.vulpes.values.stereo.Pan;
 
 import static com.vulpuslabs.vulpes.buffers.api.Stereo.LEFT;
@@ -27,9 +27,9 @@ public class PannedVoice implements ReplayVoice {
     }
 
     @Override
-    public void accept(SampleData sampleData) {
+    public void accept(StereoSample sampleData) {
         unpanned.accept(sampleData);
-        sampleData.setSample(LEFT, sampleData.getSample(LEFT) * pan.getLeft());
-        sampleData.setSample(RIGHT, sampleData.getSample(RIGHT) * pan.getLeft());
+        sampleData.set(sampleData.getLeft() * pan.getLeft(),
+                sampleData.getRight() * pan.getRight());
     }
 }

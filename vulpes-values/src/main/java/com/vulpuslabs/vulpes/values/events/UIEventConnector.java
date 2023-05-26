@@ -177,4 +177,15 @@ public class UIEventConnector {
         return eventBus;
     }
 
+    public DoubleSupplier connectCvModulatableKnob(Object cvInput, Object amountKnob, Object knob) {
+        double minValue = getDouble(knob, "GetMinValue");
+        double maxValue = getDouble(knob, "GetMaxValue");
+
+        return new CvModulatableKnob(
+                minValue,
+                maxValue,
+                connectMonoInput(cvInput),
+                connectSmoothedKnob(knob),
+                connectSmoothedKnob(amountKnob));
+    }
 }

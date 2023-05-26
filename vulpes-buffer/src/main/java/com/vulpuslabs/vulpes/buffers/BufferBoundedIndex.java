@@ -32,4 +32,5 @@ public class BufferBoundedIndex implements IntConsumer, IntSupplier {
     public int getAsInt() {
         return currentValue;
     }
+
 }

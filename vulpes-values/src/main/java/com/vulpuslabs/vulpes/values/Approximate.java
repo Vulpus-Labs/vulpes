@@ -29,6 +29,12 @@ public final class Approximate {
                 (10395.0 + 4725.0 * xpow2 + 210.0 * xpow4 + 4.0 * xpow6);
     }
 
+    public static double sinusoid(double x) {
+        double squared = x * x;
+        double cubed = squared * x;
+        return 3 * squared - 2 * cubed;
+    }
+
     public static double cosRadians(double x) {
         return cosUnit(x * UNIT_FROM_RADIANS);
     }

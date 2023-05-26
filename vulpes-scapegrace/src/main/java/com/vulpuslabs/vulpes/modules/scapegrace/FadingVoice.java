@@ -1,6 +1,6 @@
 package com.vulpuslabs.vulpes.modules.scapegrace;
 
-import com.vulpuslabs.vulpes.buffers.SampleData;
+import com.vulpuslabs.vulpes.buffers.stereo.StereoSample;
 
 import static com.vulpuslabs.vulpes.buffers.api.Stereo.LEFT;
 import static com.vulpuslabs.vulpes.buffers.api.Stereo.RIGHT;
@@ -30,13 +30,12 @@ public class FadingVoice implements ReplayVoice {
     }
 
     @Override
-    public void accept(SampleData sampleData) {
+    public void accept(StereoSample sampleData) {
         voice.accept(sampleData);
 
         if (fadePos < fadeInEnd) {
             double amount = (fadeAmount * 2.0) - (fadeAmount * fadeAmount);
-            sampleData.setSample(LEFT, sampleData.getSample(LEFT) * amount);
-            sampleData.setSample(RIGHT, sampleData.getSample(RIGHT) * amount);
+            sampleData.multiply(amount);
             fadeAmount += fadeDelta;
         }
 
@@ -46,8 +45,7 @@ public class FadingVoice implements ReplayVoice {
 
         if (fadePos >= fadeOutStart) {
             double amount = (fadeAmount * 2.0) - (fadeAmount * fadeAmount);
-            sampleData.setSample(LEFT, sampleData.getSample(LEFT) * amount);
-            sampleData.setSample(RIGHT, sampleData.getSample(RIGHT) * amount);
+            sampleData.multiply(amount);
             fadeAmount -= fadeDelta;
         }
 

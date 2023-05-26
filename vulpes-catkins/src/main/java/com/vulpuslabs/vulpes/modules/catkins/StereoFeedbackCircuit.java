@@ -1,11 +1,8 @@
 package com.vulpuslabs.vulpes.modules.catkins;
 
-import com.vulpuslabs.vulpes.buffers.SampleData;
+import com.vulpuslabs.vulpes.buffers.stereo.StereoSample;
 
 import java.util.function.DoubleSupplier;
-
-import static com.vulpuslabs.vulpes.values.api.stereo.Stereo.LEFT;
-import static com.vulpuslabs.vulpes.values.api.stereo.Stereo.RIGHT;
 
 public class StereoFeedbackCircuit {
 
@@ -20,16 +17,14 @@ public class StereoFeedbackCircuit {
         this.feedbackAmount = feedbackAmount;
     }
 
-    public void accept(SampleData sample) {
-        left.accept(sample.getSample(LEFT));
-        right.accept(sample.getSample(RIGHT));
+    public void accept(StereoSample sample) {
+        left.accept(sample.getLeft());
+        right.accept(sample.getRight());
     }
 
-    public SampleData getAsStereo(SampleData target) {
+    public void getAsStereo(StereoSample target) {
         feedbackAmountValue = feedbackAmount.getAsDouble();
-        target.setSample(LEFT, left.getAsDouble());
-        target.setSample(RIGHT, right.getAsDouble());
-        return target;
+        target.set(left.getAsDouble(), right.getAsDouble());
     }
 
     private double getFeedbackAmountValue() {
