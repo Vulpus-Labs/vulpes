@@ -20,8 +20,10 @@ public class OscillatorFromGenerator implements Oscillator {
     }
 
     public void setFrequencyHz(double frequencyHz) {
-        this.frequencyHz = frequencyHz;
-        delta = frequencyHz * sampleRateReciprocal;
+        if (frequencyHz != this.frequencyHz) {
+            this.frequencyHz = frequencyHz;
+            delta = frequencyHz * sampleRateReciprocal;
+        }
     }
 
     @Override

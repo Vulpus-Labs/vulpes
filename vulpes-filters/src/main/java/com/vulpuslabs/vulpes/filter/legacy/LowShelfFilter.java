@@ -1,4 +1,6 @@
-package com.vulpuslabs.vulpes.filter;
+package com.vulpuslabs.vulpes.filter.legacy;
+
+import com.vulpuslabs.vulpes.filter.legacy.BaseFilter;
 
 public final class LowShelfFilter extends BaseFilter {
 
@@ -16,7 +18,7 @@ public final class LowShelfFilter extends BaseFilter {
 
         configureBiquadFilter(
                 gainPlusOne + gainMinusOneTimesCs + betaTimesSn,
-                -2 * (gainMinusOne + gainPlusOneTimesCs),
+                -2.0 * (gainMinusOne + gainPlusOneTimesCs),
                 gainPlusOne + gainMinusOneTimesCs - betaTimesSn,
                 gainAbs * (gainPlusOne - gainMinusOneTimesCs + betaTimesSn),
                 2 * gainAbs * (gainMinusOne - gainPlusOneTimesCs),

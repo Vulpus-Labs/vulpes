@@ -1,7 +1,7 @@
 package com.vulpuslabs.vulpes.modules.catkins;
 
-import com.vulpuslabs.vulpes.filter.HighShelfFilter;
-import com.vulpuslabs.vulpes.filter.LowShelfFilter;
+import com.vulpuslabs.vulpes.filter.legacy.HighShelfFilter;
+import com.vulpuslabs.vulpes.filter.legacy.LowShelfFilter;
 import com.vulpuslabs.vulpes.values.Approximate;
 import com.vulpuslabs.vulpes.values.api.DoubleTransformer;
 import com.vulpuslabs.vulpes.values.smoothed.DCBlocker;

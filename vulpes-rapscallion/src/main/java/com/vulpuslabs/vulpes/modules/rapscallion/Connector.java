@@ -5,6 +5,8 @@ import com.vulpuslabs.vulpes.values.events.UIEventConnector;
 import com.vulpuslabs.vulpes.values.inputs.BooleanOr;
 import com.vulpuslabs.vulpes.values.inputs.ManualTrigger;
 import com.vulpuslabs.vulpes.values.inputs.TriggerInput;
+import voltage.core.VoltageAudioJack;
+import voltage.core.VoltageComponent;
 
 import java.util.function.BooleanSupplier;
 
@@ -17,22 +19,29 @@ public class Connector {
     }
 
     public Controller connect(
-            Object triggerJack,
-            Object triggerButton,
-            Object lenJack,
-            Object lenAmountKnob,
-            Object lenKnob,
+            VoltageAudioJack triggerJack,
+            VoltageComponent triggerButton,
+            VoltageAudioJack lenJack,
+            VoltageComponent lenAmountKnob,
+            VoltageComponent lenKnob,
+            Object autoButton,
             Object octaveUpButton,
             Object revButton,
-            Object pitchJack,
-            Object pitchAmountKnob,
-            Object pitchKnob,
-            Object fadeJack,
-            Object fadeAmountKnob,
-            Object fadeKnob,
-            Object posOut,
-            Object loopIn,
-            Object loopOut,
+            VoltageAudioJack pitchJack,
+            VoltageComponent pitchAmountKnob,
+            VoltageComponent pitchKnob,
+            VoltageAudioJack fadeJack,
+            VoltageComponent fadeAmountKnob,
+            VoltageComponent fadeKnob,
+            VoltageAudioJack balanceJack,
+            VoltageComponent balanceAmountKnob,
+            VoltageComponent balanceKnob,
+            VoltageAudioJack posOut,
+            VoltageAudioJack loopInL,
+            VoltageAudioJack loopInR,
+            VoltageAudioJack loopOutL,
+            VoltageAudioJack loopOutR,
+            VoltageAudioJack feedbackOutTrigger,
             Object rangeSwitch
     ) {
         EventBus eventBus = connector.getEventBus();
@@ -50,10 +59,16 @@ public class Connector {
                         pitchJack, pitchAmountKnob, pitchKnob),
                 connector.connectUnsmoothedCvModulatableKnob(
                         fadeJack, fadeAmountKnob, fadeKnob),
+                connector.connectUnsmoothedCvModulatableKnob(
+                        balanceJack, balanceAmountKnob, balanceKnob),
                 connector.connectMonoOutput(posOut),
-                connector.connectMonoInput(loopIn),
-                connector.connectMonoOutput(loopOut));
+                connector.connectMonoInput(loopInL),
+                connector.connectMonoInput(loopInR),
+                connector.connectMonoOutput(loopOutL),
+                connector.connectMonoOutput(loopOutR),
+                connector.connectMonoOutput(feedbackOutTrigger));
 
+        connector.connectTwoStateSwitch(autoButton, controller::setAutoRetrigger);
         connector.connectTwoStateSwitch(octaveUpButton, controller::setOctaveUp);
         connector.connectTwoStateSwitch(revButton, controller::setReverse);
 

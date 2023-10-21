@@ -22,7 +22,9 @@ public enum BufferSize {
     BUFFER_128k(17),
     BUFFER_256k(18),
     BUFFER_512k(19),
-    BUFFER_1m(20);
+    BUFFER_1m(20),
+    BUFFER_2m(21),
+    BUFFER_4m(22);
 
     private int exponent;
     private int size;

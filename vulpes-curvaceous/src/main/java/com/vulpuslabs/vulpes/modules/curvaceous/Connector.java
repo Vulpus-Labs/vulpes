@@ -2,6 +2,8 @@ package com.vulpuslabs.vulpes.modules.curvaceous;
 
 import com.vulpuslabs.vulpes.values.events.UIEventConnector;
 import com.vulpuslabs.vulpes.values.inputs.InputOrKnob;
+import voltage.core.VoltageAudioJack;
+import voltage.core.VoltageComponent;
 
 public class Connector {
 
@@ -11,9 +13,9 @@ public class Connector {
         this.connector = connector;
     }
 
-    public CurveControl.Segment startSegment(Object yIn,
-                                        Object yKnob,
-                                        Object curveKnob) {
+    public CurveControl.Segment startSegment(VoltageAudioJack yIn,
+                                             VoltageComponent yKnob,
+                                             VoltageComponent curveKnob) {
         InputOrKnob y = InputOrKnob.connect(connector, yIn, yKnob);
         CurveControl.Segment segment = new CurveControl.Segment(() -> -5.0, y);
         connector.connectUnsmoothedKnob(curveKnob, segment::setCurveType);
@@ -21,8 +23,8 @@ public class Connector {
         return segment;
     }
 
-    public CurveControl.Segment endSegment(Object yIn,
-                                             Object yKnob) {
+    public CurveControl.Segment endSegment(VoltageAudioJack yIn,
+                                             VoltageComponent yKnob) {
         InputOrKnob y = InputOrKnob.connect(connector, yIn, yKnob);
         CurveControl.Segment segment = new CurveControl.Segment(() -> 5.0, y);
         segment.setCurveType(CurveType.STEP.getSwitchValue());
@@ -30,11 +32,11 @@ public class Connector {
         return segment;
     }
 
-    public CurveControl.Segment segment(Object xIn,
-                                        Object xKnob,
-                                        Object yIn,
-                                        Object yKnob,
-                                        Object curveKnob) {
+    public CurveControl.Segment segment(VoltageAudioJack xIn,
+                                        VoltageComponent xKnob,
+                                        VoltageAudioJack yIn,
+                                        VoltageComponent yKnob,
+                                        VoltageComponent curveKnob) {
         InputOrKnob x = InputOrKnob.connect(connector, xIn, xKnob);
         InputOrKnob y = InputOrKnob.connect(connector, yIn, yKnob);
         CurveControl.Segment segment = new CurveControl.Segment(x, y);
@@ -43,8 +45,8 @@ public class Connector {
         return segment;
     }
 
-    public FMControl fmControl(Object fmInputJack,
-                                    Object attenuvertorKnob,
+    public FMControl fmControl(VoltageAudioJack fmInputJack,
+                                    VoltageComponent attenuvertorKnob,
                                     Object linExpSwitch) {
         FMControl fmControl = new FMControl(
                 connector.connectMonoInput(fmInputJack),
@@ -57,7 +59,7 @@ public class Connector {
     }
 
     public PolyFMControl polyFmControl(Object fmInputJack,
-                                        Object attenuvertorKnob,
+                                        VoltageComponent attenuvertorKnob,
                                         Object linExpSwitch) {
         PolyFMControl fmControl = new PolyFMControl(
                 connector.connectPolyInput(fmInputJack),

@@ -1,6 +1,8 @@
 package com.vulpuslabs.vulpes.modules.ranges;
 
 import com.vulpuslabs.vulpes.values.events.UIEventConnector;
+import voltage.core.VoltageAudioJack;
+import voltage.core.VoltageComponent;
 
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleSupplier;
@@ -9,10 +11,10 @@ public class RangeAdjuster {
 
     public static RangeAdjuster connect(
             UIEventConnector connector,
-            Object input,
-            Object output,
-            Object addKnob,
-            Object multiplyKnob) {
+            VoltageAudioJack input,
+            VoltageAudioJack output,
+            VoltageComponent addKnob,
+            VoltageComponent multiplyKnob) {
 
         RangeAdjuster adjuster = new RangeAdjuster(
                 connector.connectMonoInput(input),

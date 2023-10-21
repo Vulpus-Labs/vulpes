@@ -1,4 +1,6 @@
-package com.vulpuslabs.vulpes.filter;
+package com.vulpuslabs.vulpes.filter.legacy;
+
+import com.vulpuslabs.vulpes.filter.legacy.BaseFilter;
 
 public final class HighShelfFilter extends BaseFilter {
 

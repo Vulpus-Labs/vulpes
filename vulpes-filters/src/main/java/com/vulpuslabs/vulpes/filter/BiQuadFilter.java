@@ -2,7 +2,7 @@ package com.vulpuslabs.vulpes.filter;
 
 import com.vulpuslabs.vulpes.values.api.DoubleTransformer;
 
-class BiQuadFilter implements DoubleTransformer {
+public class BiQuadFilter implements DoubleTransformer {
 
     private double a1;
     private double a2;

@@ -2,8 +2,11 @@ package com.vulpuslabs.vulpes.modules.cumulonimbus;
 
 import com.vulpuslabs.vulpes.buffers.stereo.StereoBuffer;
 import com.vulpuslabs.vulpes.buffers.stereo.StereoSample;
+import com.vulpuslabs.vulpes.values.api.DoubleBiConsumer;
 
 import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
+import java.util.function.DoubleSupplier;
 
 public class GranuleTable {
 
@@ -15,7 +18,6 @@ public class GranuleTable {
     private final StereoSample bufferSample = new StereoSample();
 
     private int ramtop;
-    private int activeCount;
 
     public GranuleTable(int maxSize, Consumer<Granule> configure) {
         lastIndex = maxSize - 1;
@@ -30,7 +32,7 @@ public class GranuleTable {
     }
 
     public int getActiveCount() {
-        return activeCount;
+        return ramtop;
     }
 
     public void readSample(StereoBuffer buffer,
@@ -49,7 +51,6 @@ public class GranuleTable {
                     sample.add(bufferSample);
                     addNew = false;
                 } else {
-                    activeCount--;
                     if (i == ramtop - 1) {
                         // Allow the collection to shrink as granules complete.
                         ramtop--;
@@ -66,7 +67,19 @@ public class GranuleTable {
             configure.accept(granule);
             granule.nextSample(buffer, bufferSample, freezeDelta);
             sample.add(bufferSample);
-            activeCount++;
+        }
+    }
+
+    public int getMaxCount() {
+        return granules.length;
+    }
+
+    public void getPositions(DoubleBiConsumer c) {
+        for (int i=0; i<ramtop; i++) {
+            Granule granule = granules[i];
+            if (!granule.isFinished()) {
+                granule.getPosition(c);
+            }
         }
     }
 }

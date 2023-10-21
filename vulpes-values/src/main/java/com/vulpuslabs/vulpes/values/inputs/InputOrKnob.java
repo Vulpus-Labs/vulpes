@@ -1,14 +1,16 @@
 package com.vulpuslabs.vulpes.values.inputs;
 
 import com.vulpuslabs.vulpes.values.events.UIEventConnector;
+import voltage.core.VoltageAudioJack;
+import voltage.core.VoltageComponent;
 
 import java.util.function.DoubleSupplier;
 
 public class InputOrKnob implements DoubleSupplier {
 
     public static InputOrKnob connect(UIEventConnector connector,
-                                      Object input,
-                                      Object knob) {
+                                      VoltageAudioJack input,
+                                      VoltageComponent knob) {
         InputOrKnob result = new InputOrKnob(
                 connector.connectMonoInput(input)
         );

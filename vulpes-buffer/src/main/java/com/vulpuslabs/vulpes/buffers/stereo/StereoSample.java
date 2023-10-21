@@ -1,6 +1,8 @@
 package com.vulpuslabs.vulpes.buffers.stereo;
 
+import com.vulpuslabs.vulpes.values.Approximate;
 import com.vulpuslabs.vulpes.values.api.DoubleBiConsumer;
+import com.vulpuslabs.vulpes.values.stereo.Pan;
 
 import java.util.function.DoubleConsumer;
 
@@ -54,5 +56,20 @@ public class StereoSample {
 
     public double getRight() {
         return right;
+    }
+
+    public void saturate() {
+        left = 5.0 * Approximate.tanh(left * 0.2);
+        right = 5.0 * Approximate.tanh(right * 0.2);
+    }
+
+    public void pan(Pan pan) {
+        left *= pan.getLeft();
+        right *= pan.getRight();
+    }
+
+    public void copyTo(StereoSample other) {
+        other.left = left;
+        other.right = right;
     }
 }

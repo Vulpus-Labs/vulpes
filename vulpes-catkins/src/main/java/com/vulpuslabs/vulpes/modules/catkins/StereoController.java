@@ -95,8 +95,8 @@ public class StereoController {
             inputRight.isConnected() ? inputRight.getAsDouble() : leftInput);
 
         feedbackCircuit.getAsStereo(feedbackData);
-        inputData.add(feedbackData);
-        buffer.write(inputData);
+        feedbackData.add(inputData);
+        buffer.write(feedbackData);
 
         outputData.set(0.0, 0.0);
 

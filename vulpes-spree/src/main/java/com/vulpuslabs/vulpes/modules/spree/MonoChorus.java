@@ -2,8 +2,8 @@ package com.vulpuslabs.vulpes.modules.spree;
 
 import com.vulpuslabs.vulpes.buffers.api.BufferSize;
 import com.vulpuslabs.vulpes.buffers.mono.MonoBuffer;
-import com.vulpuslabs.vulpes.filter.HighShelfFilter;
-import com.vulpuslabs.vulpes.filter.api.Filter;
+import com.vulpuslabs.vulpes.filter.legacy.HighShelfFilter;
+import com.vulpuslabs.vulpes.filter.legacy.api.Filter;
 import com.vulpuslabs.vulpes.values.lfo.FakeSinLfo;
 import com.vulpuslabs.vulpes.values.api.DoubleTransformer;
 import com.vulpuslabs.vulpes.values.clipping.SoftClipper;

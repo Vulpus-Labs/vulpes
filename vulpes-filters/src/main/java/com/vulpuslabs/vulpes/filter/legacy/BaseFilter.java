@@ -1,26 +1,36 @@
-package com.vulpuslabs.vulpes.filter;
+package com.vulpuslabs.vulpes.filter.legacy;
 
-import com.vulpuslabs.vulpes.filter.api.Filter;
+import com.vulpuslabs.vulpes.filter.BiQuadFilter;
+import com.vulpuslabs.vulpes.filter.legacy.api.Filter;
 
 abstract class BaseFilter implements Filter {
 
+    private static final double DB_SCALING = 1.0 / 40.0;
+
     public final BiQuadFilter filter = new BiQuadFilter();
-    private final int sampleRate;
+    private final double freqScaling;
     private final boolean calculateGainAbs;
 
     protected BaseFilter(int sampleRate, boolean calculateGainAbs) {
-        this.sampleRate = sampleRate;
+        this.freqScaling = 2.0 * Math.PI / sampleRate;
         this.calculateGainAbs = calculateGainAbs;
     }
 
     @Override
     public void configure(double centerFreq, double q, double gainDb) {
-        var gainAbs = calculateGainAbs ? Math.pow(10, gainDb/ 40) : 0.0;
-        var omega = 2 * Math.PI * centerFreq / sampleRate;
+        double gainAbs = 0.0;
+        double beta = 0.0;
+
+        if (calculateGainAbs) {
+            gainAbs = Math.pow(10, gainDb * DB_SCALING);
+            beta = Math.sqrt(gainAbs + gainAbs);
+        }
+
+        var omega = centerFreq * freqScaling;
         var sn = Math.sin(omega);
         var cs = Math.cos(omega);
-        var alpha = sn / (2 * q);
-        var beta = Math.sqrt(gainAbs + gainAbs);
+
+        var alpha = sn / (q + q);
 
         configureFilter(gainAbs, omega, sn, cs, alpha, beta);
     }

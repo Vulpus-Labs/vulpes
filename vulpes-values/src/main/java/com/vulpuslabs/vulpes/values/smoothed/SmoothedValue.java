@@ -25,6 +25,12 @@ public class SmoothedValue implements DoubleConsumer, DoubleSupplier {
         this.b1 = 1.0 - a0;
     }
 
+    public SmoothedValue(double decayRate, double initial) {
+        this.a0 = decayRate;
+        this.b1 = 1.0 - a0;
+        this.y1 = initial;
+    }
+
     public void setDecayRate(double decayRate) {
         this.a0 = decayRate;
         this.b1 = 1.0 - a0;

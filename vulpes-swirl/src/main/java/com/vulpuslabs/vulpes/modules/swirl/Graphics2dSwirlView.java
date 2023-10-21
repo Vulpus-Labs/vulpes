@@ -135,6 +135,7 @@ public class Graphics2dSwirlView implements SwirlView {
         }
 
         g.drawImage(plot, 0, 0, null);
+        g.dispose();
     }
 
     private void drawBackground() {
@@ -173,7 +174,7 @@ public class Graphics2dSwirlView implements SwirlView {
         double angle = 0.0;
         double angleDelta = 1.0 / 12.0;
         double outerRadius = maxRadius - 1.0;
-
+        int a=0, b=0;
         for (int i=0; i<12; i++) {
             g.drawLine(
                     centreX,
@@ -196,5 +197,7 @@ public class Graphics2dSwirlView implements SwirlView {
             g.draw(line);
             angle += angleDelta;
         }
+
+        g.dispose();
     }
 }

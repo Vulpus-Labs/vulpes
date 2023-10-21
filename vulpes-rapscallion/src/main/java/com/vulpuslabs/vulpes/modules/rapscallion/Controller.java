@@ -1,6 +1,7 @@
 package com.vulpuslabs.vulpes.modules.rapscallion;
 
 import com.vulpuslabs.vulpes.values.events.TwoPositionSwitchState;
+import com.vulpuslabs.vulpes.values.stereo.Pan;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleConsumer;
@@ -27,18 +28,24 @@ public class Controller {
     private static final double ONE_OVER_TWELVE = 1.0 / 12.0;
 
     private final BooleanSupplier triggerIn;
+    private boolean triggerSet;
     private final DoubleConsumer modOut;
-    private final DoubleSupplier loopIn;
-    private final DoubleConsumer loopOut;
+    private final DoubleSupplier loopInL;
+    private final DoubleSupplier loopInR;
+    private final DoubleConsumer loopOutL;
+    private final DoubleConsumer loopOutR;
+    private final DoubleConsumer fadeOutTrigger;
 
     private int rangeMs;
     private final DoubleSupplier length;
 
+    private boolean isAutoRetrigger;
     private boolean isOctaveUp;
 
     private boolean isReverse;
     private final DoubleSupplier pitch;
     private final DoubleSupplier fade;
+    private final DoubleSupplier balance;
 
     private int sampleCount;
     private double modValue;
@@ -52,8 +59,11 @@ public class Controller {
 
     private int fadeOutStart;
 
-    private boolean pitchModIsConnected;
+    private final Pan pan = new Pan();
 
+    public void setAutoRetrigger(TwoPositionSwitchState autoRetrigger) {
+        isAutoRetrigger = autoRetrigger == TwoPositionSwitchState.ON;
+    }
     public void setOctaveUp(TwoPositionSwitchState octaveUp) {
         isOctaveUp = octaveUp == TwoPositionSwitchState.ON;
     }
@@ -66,24 +76,37 @@ public class Controller {
                       DoubleSupplier length,
                       DoubleSupplier pitch,
                       DoubleSupplier fade,
-                      DoubleConsumer modOut, DoubleSupplier loopIn, DoubleConsumer loopOut) {
+                      DoubleSupplier balance,
+                      DoubleConsumer modOut,
+                      DoubleSupplier loopInL,
+                      DoubleSupplier loopInR,
+                      DoubleConsumer loopOutL,
+                      DoubleConsumer loopOutR,
+                      DoubleConsumer fadeOutTrigger) {
         this.triggerIn = triggerIn;
         this.length = length;
         this.pitch = pitch;
         this.fade = fade;
+        this.balance = balance;
         this.modOut = modOut;
-        this.loopIn = loopIn;
-        this.loopOut = loopOut;
+        this.loopInL = loopInL;
+        this.loopInR = loopInR;
+        this.loopOutL = loopOutL;
+        this.loopOutR = loopOutR;
+        this.fadeOutTrigger = fadeOutTrigger;
     }
 
     public void processSample() {
         modOut.accept(modValue);
+        triggerSet = triggerSet || triggerIn.getAsBoolean();
 
         if (sampleCount == 0) {
-            if (triggerIn.getAsBoolean()) {
+            if (triggerSet || isAutoRetrigger) {
                 triggerNew();
+                triggerSet = false;
             } else {
-                loopOut.accept(0.0);
+                loopOutL.accept(0.0);
+                loopOutR.accept(0.0);
                 return;
             }
         }
@@ -91,16 +114,21 @@ public class Controller {
         sampleCount -= 1;
         modValue += modDelta;
 
-        double loopInSample = loopIn.getAsDouble();
+        double loopInSampleL = loopInL.getAsDouble() * pan.getLeft();
+        double loopInSampleR = loopInR.getAsDouble() * pan.getRight();
 
         if (sampleCount == fadeOutStart) {
             fadeCount = sampleCount;
             fadeValue = 1.0;
             fadeDelta = -fadeDelta;
+            fadeOutTrigger.accept(5.0);
+        } else {
+            fadeOutTrigger.accept(0.0);
         }
 
         if (fadeCount == -1) {
-            loopOut.accept(loopInSample);
+            loopOutL.accept(loopInSampleL);
+            loopOutR.accept(loopInSampleR);
             return;
         }
 
@@ -108,7 +136,8 @@ public class Controller {
         double fadeValueCubed = fadeValueSquared * fadeValue;
         double fadeAmount = 3 * fadeValueSquared - 2 * fadeValueCubed;
 
-        loopOut.accept(loopInSample * fadeAmount);
+        loopOutL.accept(loopInSampleL * fadeAmount);
+        loopOutR.accept(loopInSampleR * fadeAmount);
         fadeValue += fadeDelta;
         fadeCount -= 1;
     }
@@ -116,13 +145,15 @@ public class Controller {
     private void triggerNew() {
         double lengthValue = length.getAsDouble();
         double pitchValue = pitch.getAsDouble();
+        pan.set(balance.getAsDouble());
 
-        // Value between -1/12 and 13/12
+        // Value between -7/12 and 19/12
         double pitchOffsetOctaves = (isOctaveUp ? 1.0 : 0.0)
                 + pitchValue * ONE_OVER_TWELVE;
+        double speedRatio = Math.pow(2.0, pitchOffsetOctaves);
 
         // By how much of the range should the tape head have moved if playing full length?
-        double fullDelta = isReverse ? -2 - pitchOffsetOctaves  : pitchOffsetOctaves;
+        double fullDelta = isReverse ? -1 - speedRatio  : speedRatio - 1;
         double absDelta = Math.abs(fullDelta);
         double playLengthPercent = lengthValue;
 
@@ -164,20 +195,18 @@ public class Controller {
         return sampleCount > 0;
     }
 
-    public void setPitchModIsConnected(boolean pitchModIsConnected) {
-        this.pitchModIsConnected = pitchModIsConnected;
-    }
-
     public String getEffectiveLengthDescription() {
         double lengthValue = length.getAsDouble();
         double pitchValue = pitch.getAsDouble();
 
-        // Value between -1/12 and 13/12
+        // Value between -7/12 and 19/12
         double pitchOffsetOctaves = (isOctaveUp ? 1.0 : 0.0)
                 + pitchValue * ONE_OVER_TWELVE;
+        // Make exp
+        double speedRatio = Math.pow(2.0, pitchOffsetOctaves);
 
         // By how much of the range should the tape head have moved if playing full length?
-        double fullDelta = isReverse ? -2 - pitchOffsetOctaves  : pitchOffsetOctaves;
+        double fullDelta = isReverse ? -1 - speedRatio  : speedRatio - 1;
 
         double absDelta = Math.abs(fullDelta);
         double playLengthPercent = absDelta > 1.0
